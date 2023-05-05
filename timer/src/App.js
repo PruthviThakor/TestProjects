@@ -6,35 +6,39 @@ import AddTimer from './Components/AddTimer';
 import { Card, CardHeader } from '@mui/material';
 
 function App() {
-  const [timers, setTimers] = useState([
-    { startTime: '4/5/2023 18:23:27', msleft: 43 },
-    { startTime: '4/5/2023 18:23:27', msleft: 52 }
-  ]);
+  const [timers, setTimers] = useState([]);
   const [value, setValue] = useState();
   const [isclicked, setIsClicked] = useState(false);
   const addTimers = () => {
     let time = new Date();
-    let newtimers = timers;
+    let newtimers = JSON.parse(localStorage.getItem('timers')) || timers;
     newtimers.push({
       'startTime': `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-US', { hour12: false })}`,
-      'msleft': parseInt(value)
+      'msleft': parseInt(value) * 100
     })
     setTimers(newtimers);
+    localStorage.setItem('timers', JSON.stringify(newtimers));
     setIsClicked(!isclicked);
   }
   const deleteAction = (id) => {
-    let newtimers = timers
+    let newtimers = JSON.parse(localStorage.getItem('timers')) || timers
     delete newtimers[id];
     setTimers(newtimers);
+    localStorage.setItem('timers', JSON.stringify(newtimers));
     setIsClicked(!isclicked);
   }
-  const TimersList = () =>
-    timers.map((value, index) => {
+  const TimersList = () => {
+    let gettimers = JSON.parse(localStorage.getItem('timers')) || timers;
+
+    return gettimers.map((value, index) => {
       if (value && value.msleft) {
+        let msvalue = value.msleft.toString()
+        let len = msvalue.length;
+        let finalstr = msvalue.substring(0, len - 2) + "," + msvalue.substring(len - 2);
         return (
           <Card variant="outlined" className="timer-card" >
             <CardHeader
-              title={value.msleft}
+              title={finalstr}
               action={<IconButton aria-label="delete" onClick={() => deleteAction(index)}>
                 <DeleteIcon />
               </IconButton>}
@@ -47,28 +51,26 @@ function App() {
       }
     }
     )
+  }
   const countdownTimer = () => {
-
-    let newtimers = timers.filter((value) => {
-        if (value.msleft > 0) {
-          return true;
-        }
+    let gettimers = JSON.parse(localStorage.getItem('timers')) || timers;
+    let newtimers = gettimers.filter((value) => {
+      if (value && value.msleft > 0) {
+        return true;
+      }
       return false;
     }).map((value, index) => {
-          return { ...value, 'msleft': value.msleft - 1 }
- 
+      return { ...value, 'msleft': value.msleft - 1 }
+
     })
     setTimers(newtimers);
-    setIsClicked(!isclicked);
+    localStorage.setItem('timers', JSON.stringify(newtimers));
   }
 
   useEffect(() => {
-    setTimeout(countdownTimer, 1000);
+    setTimeout(countdownTimer, 10);
   });
 
-  useEffect(() => {
-    TimersList();
-  }, [isclicked])
   return (
     <div className="App">
       <div className="DisplayTimer">
